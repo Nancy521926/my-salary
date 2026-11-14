@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# 构建中间产物
+build/
+*.idsig
+
+# 签名密钥（只留在本机 ~/.payslip-build/）
+debug.keystore
+*.keystore
+
+# 只保留 output/ 下打包好的 apk

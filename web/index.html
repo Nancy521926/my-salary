@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eef2f8">
+<title>My salary</title>
+<style>
+:root{
+  --bg:#eef2f8; --card:#ffffff; --line:#e3e8f0; --text:#17202e; --muted:#6b7788;
+  --primary:#2f6fed; --excel:#1c8a5c; --word:#2b5fd9; --danger:#d9453d; --radius:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;}
+body{padding-bottom:calc(92px + env(safe-area-inset-bottom));font-size:15px;line-height:1.45}
+button{font:inherit;border:0;background:none;color:inherit;cursor:pointer}
+input{font:inherit;color:inherit}
+h1,h2,h3,p{margin:0}
+
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+  gap:10px;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;
+  background:linear-gradient(180deg,rgba(238,242,248,.96),rgba(238,242,248,.86));
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#fff;
+  font-weight:700;font-size:20px;
+  background:linear-gradient(135deg,#3b82f6,#1e40af);box-shadow:0 6px 14px rgba(37,99,235,.28)}
+.brand h1{font-size:17px;font-weight:700;letter-spacing:.2px}
+.brand p{font-size:11.5px;color:var(--muted);margin-top:1px}
+
+main{padding:14px 14px 0;max-width:760px;margin:0 auto}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin:6px 2px 10px}
+.section-head h2{font-size:14px;font-weight:600;color:#3b475a;display:flex;align-items:center;gap:8px}
+.chip{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;
+  padding:0 7px;border-radius:10px;background:#dfe8f8;color:#2f6fed;font-size:11.5px;font-weight:600}
+
+.switch{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);user-select:none}
+.switch input{appearance:none;width:42px;height:25px;border-radius:99px;background:#cfd7e3;
+  position:relative;outline:none;transition:background .2s;cursor:pointer}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.switch input:checked{background:var(--primary)}
+.switch input:checked::after{transform:translateX(17px)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:0 2px 10px rgba(23,32,46,.04);margin-bottom:10px;overflow:hidden}
+.rec{display:flex;align-items:center;gap:12px;padding:14px 14px 14px 16px}
+.rec-main{flex:1;min-width:0}
+.rec-name{font-size:16px;font-weight:650;display:flex;align-items:center;gap:8px}
+.rec-name .tag{font-size:10.5px;font-weight:600;color:#8a5a00;background:#fff3d6;
+  border-radius:6px;padding:1px 6px}
+.rec-sub{font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-amount{text-align:right;font-variant-numeric:tabular-nums}
+.rec-amount .k{font-size:10.5px;color:var(--muted)}
+.rec-amount .v{font-size:17px;font-weight:700;color:#0f7a4f}
+.rec-actions{display:flex;flex-direction:column;gap:6px}
+.icon-btn{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+  background:#f1f4f9;color:#54627a;font-size:15px;border:1px solid #e6ebf3}
+.icon-btn.danger{color:var(--danger)}
+.icon-btn:active{transform:scale(.96)}
+
+.add-btn{width:100%;height:48px;border-radius:14px;border:1.5px dashed #b9c6db;color:#48607f;
+  background:rgba(255,255,255,.6);font-size:14.5px;font-weight:600;display:flex;align-items:center;
+  justify-content:center;gap:6px;margin:4px 0 18px}
+.add-btn:active{background:#fff}
+
+.preview-head{display:flex;align-items:center;justify-content:space-between;margin:6px 2px 10px}
+.preview-head h2{font-size:14px;font-weight:600;color:#3b475a}
+.preview-head span{font-size:11.5px;color:var(--muted)}
+.tbl-wrap{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:8px}
+.tbl{border-collapse:collapse;font-size:11px;color:#1c2534}
+.tbl th,.tbl td{border:1px solid #39424f;padding:5px 2px;text-align:center;vertical-align:middle;
+  white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.25}
+.tbl th{font-weight:500;background:#f7f9fc}
+.tbl tr:nth-child(even) td{background:#fbfcfe}
+.hint{font-size:11.5px;color:var(--muted);text-align:center;margin:6px 0 18px}
+
+.bottom-bar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;gap:10px;
+  padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+  background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line)}
+.bottom-bar button{flex:1;height:50px;border-radius:14px;font-size:15px;font-weight:650;
+  display:flex;align-items:center;justify-content:center;gap:7px;color:#fff}
+.bottom-bar button:active{transform:scale(.985)}
+.btn-img{background:linear-gradient(135deg,#22a06b,#157a4d);box-shadow:0 6px 16px rgba(28,138,92,.26);flex:1.35 !important}
+.btn-print{background:#f0f3f8;color:#42506a !important;border:1px solid #dfe5ee;flex:.85 !important}
+
+/* editor sheet */
+.sheet{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;
+  transform:translateY(100%);transition:transform .26s cubic-bezier(.22,.8,.3,1);visibility:hidden}
+.sheet.open{transform:translateY(0);visibility:visible}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:rgba(255,255,255,.96);
+  border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
+.sheet-head h3{font-size:16px;font-weight:650}
+.sheet-head button{font-size:14.5px;color:var(--primary);font-weight:600;padding:6px 4px}
+.sheet-head .done{background:var(--primary);color:#fff;padding:8px 16px;border-radius:10px;font-size:14px}
+.sheet-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 30px;
+  max-width:760px;width:100%;margin:0 auto}
+.fgroup{background:#fff;border:1px solid var(--line);border-radius:14px;padding:4px 14px 10px;margin-bottom:12px}
+.fgroup > h4{font-size:12.5px;color:#7c889b;font-weight:600;margin:12px 0 6px;letter-spacing:.4px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
+.fields .full{grid-column:1 / -1}
+.field{display:flex;flex-direction:column;gap:3px;padding:6px 0}
+.field label{font-size:12px;color:#5b6879;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.badge{font-size:10px;font-weight:600;border-radius:6px;padding:1px 6px;cursor:pointer;
+  background:#e7efff;color:#2f6fed;border:1px solid #d3e2ff}
+.badge.manual{background:#fff3d6;color:#9a6a00;border-color:#ffe2a3}
+.field input{width:100%;height:40px;border-radius:10px;border:1px solid #dde4ee;background:#f9fbfe;
+  padding:0 11px;font-size:15px;outline:none;transition:border-color .15s,background .15s;
+  font-variant-numeric:tabular-nums}
+.field input:focus{border-color:#8fb3ff;background:#fff;box-shadow:0 0 0 3px rgba(47,111,237,.12)}
+.field input.auto{background:#f2f7ff;color:#1d4ed8;font-weight:600}
+.field input::placeholder{color:#b3bdcc}
+.rule{font-size:11.5px;color:#7c889b;background:#f5f8fd;border:1px dashed #d7e2f2;border-radius:10px;
+  padding:8px 11px;margin-top:8px;line-height:1.7}
+.rule b{color:#42506a;font-weight:600}
+
+.toast{position:fixed;left:50%;bottom:calc(104px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
+  z-index:99;background:rgba(23,32,46,.92);color:#fff;font-size:13.5px;padding:11px 18px;border-radius:12px;
+  opacity:0;pointer-events:none;transition:all .22s;max-width:86vw;text-align:center;line-height:1.5}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.confirm-mask{position:fixed;inset:0;z-index:80;background:rgba(15,22,35,.42);display:none;
+  align-items:center;justify-content:center;padding:28px}
+.confirm-mask.show{display:flex}
+.confirm{background:#fff;border-radius:18px;width:100%;max-width:330px;padding:22px 20px 14px;
+  box-shadow:0 20px 50px rgba(15,22,35,.3)}
+.confirm p{font-size:14.5px;line-height:1.6;color:#26313f;text-align:center;margin-bottom:18px}
+.confirm .row{display:flex;gap:10px}
+.confirm .row button{flex:1;height:44px;border-radius:12px;font-size:14.5px;font-weight:600}
+.confirm .cancel{background:#f0f3f8;color:#42506a}
+.confirm .ok{background:var(--danger);color:#fff}
+
+.empty{padding:26px 10px 20px;text-align:center;color:var(--muted);font-size:13px}
+@media (max-width:360px){ .fields{grid-template-columns:1fr} .field.full{grid-column:auto} }
+
+/* 打印 / 导出 PDF：只留表格，A4 横向铺满 */
+@media print{
+  @page{ size:A4 landscape; margin:6mm }
+  html,body{ background:#fff !important; padding:0 !important; margin:0 !important }
+  .topbar,.bottom-bar,.section-head,#recordList,#btnAdd,
+  .preview-head,.hint,#sheet,.toast,.confirm-mask{ display:none !important }
+  main{ padding:0 !important; margin:0 !important; max-width:none !important }
+  .tbl-wrap{ border:0 !important; border-radius:0 !important; padding:0 !important;
+    margin:0 !important; overflow:visible !important; background:#fff !important }
+  .tbl{ width:100% !important; table-layout:auto !important; font-size:7pt !important; color:#000 !important }
+  .tbl th,.tbl td{ border:1px solid #000 !important; padding:2px 1px !important;
+    white-space:normal !important; word-break:break-all; line-height:1.15 !important;
+    background:#fff !important }
+  .tbl th{ background:#fff !important }
+  .tbl thead{ display:table-header-group }
+  .tbl tr{ page-break-inside:avoid }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">￥</div>
+    <div>
+      <h1>My salary</h1>
+      <p>离线使用 · 数据只保存在本机</p>
+    </div>
+  </div>
+  <button id="btnSample" class="ghost" style="font-size:13px;color:#2f6fed;font-weight:600;padding:8px 6px">载入示例</button>
+</header>
+
+<main>
+  <div class="section-head">
+    <h2>工资条记录 <span class="chip" id="recCount">0</span></h2>
+    <label class="switch"><input type="checkbox" id="autoCalc" checked><span>自动计算</span></label>
+  </div>
+
+  <div id="recordList"></div>
+
+  <button id="btnAdd" class="add-btn">＋ 新增一条工资条</button>
+
+  <div class="preview-head">
+    <h2>打印预览</h2>
+    <span>与保存的图片、打印内容完全一致</span>
+  </div>
+  <div class="tbl-wrap" id="previewWrap"></div>
+  <p class="hint">A4 横向 · 25 列 · 保存到相册可直接查看或发微信，打印时可另存为 PDF</p>
+</main>
+
+<div class="bottom-bar">
+  <button id="btnImg" class="btn-img">保存到相册</button>
+  <button id="btnPrint" class="btn-print">打印 / 存 PDF</button>
+</div>
+
+<div class="sheet" id="sheet">
+  <div class="sheet-head">
+    <button id="btnCancel" style="color:#5b6879">取消</button>
+    <h3>编辑工资条</h3>
+    <button id="btnDone" class="done">完成</button>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="confirm-mask" id="confirmMask">
+  <div class="confirm">
+    <p id="confirmText"></p>
+    <div class="row">
+      <button class="cancel" id="confirmCancel">取消</button>
+      <button class="ok" id="confirmOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+ * 工资条生成器 · 单文件离线应用
+ * 25 列表格结构完全按实物工资条照片还原：
+ * 序号 月份 姓名 薪资类别 实勤小时数 底薪 全勤奖
+ * 平时加班小时 平时加班费 假日加班小时 假日加班费
+ * 法定加班小时 法定假加班费 夜班补贴 其它 住房补贴
+ * 缺勤小时 扣款 应发合计 代扣社保 社保补缴 个人所得税 其它 实发 备注
+ * ============================================================ */
+
+const COLS = [
+  {k:'seq',            label:'序号',        lines:['序号'],        type:'text',  width:6.5,  tw:520},
+  {k:'month',          label:'月份',        lines:['月份'],        type:'text',  width:6.5,  tw:600},
+  {k:'name',           label:'姓名',        lines:['姓名'],        type:'text',  width:8.5,  tw:720},
+  {k:'salaryType',     label:'薪资类别',    lines:['薪资类别'],    type:'text',  width:10,   tw:640},
+  {k:'actualHours',    label:'实勤小时数',  lines:['实勤小','时数'],type:'hours', width:8.3,  tw:600},
+  {k:'baseSalary',     label:'底薪',        lines:['底薪'],        type:'plain', width:6.5,  tw:560},
+  {k:'fullAttendance', label:'全勤奖',      lines:['全勤奖'],      type:'money', width:9.5,  tw:560},
+  {k:'otHours1',       label:'平时加班小时',lines:['平时加','班小时'],type:'hours',width:8.3,  tw:600},
+  {k:'otPay1',         label:'平时加班费',  lines:['平时加班','费'],type:'money', width:10.2, tw:600},
+  {k:'otHours2',       label:'假日加班小时',lines:['假日加','班小时'],type:'hours',width:8.3,  tw:600},
+  {k:'otPay2',         label:'假日加班费',  lines:['假日加班','费'],type:'money', width:10.2, tw:600},
+  {k:'otHours3',       label:'法定加班小时',lines:['法定加','班小时'],type:'hours',width:8.3,  tw:600},
+  {k:'otPay3',         label:'法定假加班费',lines:['法定假','加班费'],type:'money', width:9.6,  tw:620},
+  {k:'nightAllowance', label:'夜班补贴',    lines:['夜班补贴'],    type:'money', width:10.0, tw:620},
+  {k:'otherAllowance', label:'其它',        lines:['其它'],        type:'money', width:9.5,  tw:450},
+  {k:'housingAllowance',label:'住房补贴',   lines:['住房补','贴'],  type:'money', width:8.3,  tw:600},
+  {k:'absentHours',    label:'缺勤小时',    lines:['缺勤小','时'],  type:'hours', width:8.3,  tw:600},
+  {k:'deduction',      label:'扣款',        lines:['扣款'],        type:'money', width:9.5,  tw:560},
+  {k:'grossPay',       label:'应发合计',    lines:['应发合计'],    type:'money', width:10.0, tw:640},
+  {k:'socialSecurity', label:'代扣社保',    lines:['代扣社保'],    type:'money', width:9.6,  tw:640},
+  {k:'socialMakeup',   label:'社保补缴',    lines:['社保补缴'],    type:'money', width:9.6,  tw:640},
+  {k:'incomeTax',      label:'个人所得税',  lines:['个人所得','税'],type:'money', width:9.6,  tw:600},
+  {k:'otherDeduction', label:'其它',        lines:['其它'],        type:'money', width:8.3,  tw:450},
+  {k:'netPay',         label:'实发',        lines:['实发'],        type:'money', width:9.6,  tw:620},
+  {k:'remark',         label:'备注',        lines:['备注'],        type:'text',  width:9,    tw:650}
+];
+
+const AUTO_KEYS = ['otPay1','otPay2','otPay3','grossPay','netPay'];
+const STORE_KEY = 'payslip.app.v1';
+
+/* ---------------- 状态 ---------------- */
+let state = { auto: true, records: [], editingId: null };
+let dirtyTimer = null;
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function newRecord(seed){
+  const r = {
+    id: uid(), seq:'', month:'', name:'', salaryType:'底薪',
+    actualHours:'', baseSalary:'', fullAttendance:'',
+    otHours1:'', otPay1:'', otHours2:'', otPay2:'', otHours3:'', otPay3:'',
+    nightAllowance:'', otherAllowance:'', housingAllowance:'', absentHours:'', deduction:'',
+    grossPay:'', socialSecurity:'', socialMakeup:'', incomeTax:'', otherDeduction:'', netPay:'',
+    remark:'', manual:{}
+  };
+  if (seed) Object.assign(r, seed);
+  return r;
+}
+
+function num(v){
+  if (v === undefined || v === null) return 0;
+  const n = parseFloat(String(v).replace(/[,，¥\s]/g,''));
+  return isFinite(n) ? n : 0;
+}
+function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+function fmt2(n){ return (round2(n)).toFixed(2); }
+function hasValue(v){ return v !== undefined && v !== null && String(v).trim() !== ''; }
+function fmtNum(v){ return Number(v).toString(); }
+
+/* ---------------- 计算 ---------------- */
+function recalc(r){
+  if (!state.auto) return;
+  const base = num(r.baseSalary);
+  const hourly = round2(base / 174);           // 21.75 天 × 8 小时
+  if (!r.manual.otPay1) r.otPay1 = hasValue(r.otHours1) || base ? fmt2(hourly * 1.5 * num(r.otHours1)) : '';
+  if (!r.manual.otPay2) r.otPay2 = hasValue(r.otHours2) || base ? fmt2(hourly * 2 * num(r.otHours2)) : '';
+  if (!r.manual.otPay3) r.otPay3 = hasValue(r.otHours3) || base ? fmt2(hourly * 3 * num(r.otHours3)) : '';
+  const earn = base + num(r.fullAttendance)
+    + num(r.otPay1) + num(r.otPay2) + num(r.otPay3)
+    + num(r.nightAllowance) + num(r.otherAllowance) + num(r.housingAllowance);
+  if (!r.manual.grossPay) r.grossPay = (base || earn || hasValue(r.deduction)) ? fmt2(earn - num(r.deduction)) : '';
+  const gross = num(r.grossPay);
+  const ded = num(r.socialSecurity) + num(r.socialMakeup) + num(r.incomeTax) + num(r.otherDeduction);
+  if (!r.manual.netPay) r.netPay = (hasValue(r.grossPay) || ded) ? fmt2(gross - ded) : '';
+}
+function recalcAll(){ state.records.forEach(recalc); }
+
+/* ---------------- 记录取值 ---------------- */
+function displayValue(r, col){
+  const v = r[col.k];
+  if (!hasValue(v)) return '';
+  if (col.type === 'money') return fmt2(num(v));
+  if (col.type === 'hours' || col.type === 'plain') return fmtNum(num(v));
+  return String(v).trim();
+}
+
+/* ---------------- 本地存储 ---------------- */
+function saveLocal(){
+  clearTimeout(dirtyTimer);
+  dirtyTimer = setTimeout(()=>{
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({auto: state.auto, records: state.records})); } catch(e){}
+  }, 250);
+}
+function loadLocal(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.records)) return false;
+    state.auto = data.auto !== false;
+    state.records = data.records.map(r => Object.assign(newRecord(), r, {manual: r.manual || {}}));
+    return state.records.length > 0;
+  } catch(e){ return false; }
+}
+
+/* ---------------- UI：列表 ---------------- */
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function renderList(){
+  const box = document.getElementById('recordList');
+  document.getElementById('recCount').textContent = state.records.length;
+  if (!state.records.length){
+    box.innerHTML = '<div class="card"><div class="empty">还没有记录，点下方按钮新增，或点右上角「载入示例」</div></div>';
+    return;
+  }
+  box.innerHTML = state.records.map((r, i) => {
+    const name = r.name ? esc(r.name) : '未命名';
+    const sub = [r.month ? '月份 ' + esc(r.month) : '', r.salaryType ? esc(r.salaryType) : '',
+      r.seq ? '序号 ' + esc(r.seq) : ''].filter(Boolean).join(' · ') || '点击右侧编辑';
+    const net = hasValue(r.netPay) ? '￥' + fmt2(num(r.netPay)) : '—';
+    return `<div class="card"><div class="rec">
+      <div class="rec-main">
+        <div class="rec-name">${name}${r.manual && Object.keys(r.manual).length ? '<span class="tag">含手动值</span>' : ''}</div>
+        <div class="rec-sub">${sub}</div>
+      </div>
+      <div class="rec-amount"><div class="k">实发</div><div class="v">${net}</div></div>
+      <div class="rec-actions">
+        <button class="icon-btn" data-act="edit" data-id="${r.id}" title="编辑">✎</button>
+        <button class="icon-btn" data-act="dup" data-id="${r.id}" title="复制">⧉</button>
+        <button class="icon-btn danger" data-act="del" data-id="${r.id}" title="删除">✕</button>
+      </div>
+    </div></div>`;
+  }).join('');
+}
+
+function renderPreview(){
+  const wrap = document.getElementById('previewWrap');
+  if (!state.records.length){ wrap.innerHTML = '<div class="empty">暂无数据</div>'; return; }
+  const widths = computeTwWidths();
+  let h = '<table class="tbl"><colgroup>' + widths.map(w => `<col style="width:${Math.max(34, Math.round(w/13.5))}px">`).join('') + '</colgroup><thead><tr>';
+  COLS.forEach(c => { h += `<th>${c.lines.map(esc).join('<br>')}</th>`; });
+  h += '</tr></thead><tbody>';
+  state.records.forEach(r => {
+    h += '<tr>' + COLS.map(c => `<td>${esc(displayValue(r, c))}</td>`).join('') + '</tr>';
+  });
+  h += '</tbody></table>';
+  wrap.innerHTML = h;
+}
+
+/* ---------------- 编辑器 ---------------- */
+const FIELD_DEFS = [
+  {group:'基本信息', fields:[
+    {k:'seq',    label:'序号',     ph:'如 040'},
+    {k:'month',  label:'月份',     ph:'如 2026-09'},
+    {k:'name',   label:'姓名',     ph:'请输入姓名'},
+    {k:'salaryType', label:'薪资类别', ph:'如 底薪'}
+  ]},
+  {group:'出勤与底薪', fields:[
+    {k:'actualHours',    label:'实勤小时数', ph:'如 48',   num:true},
+    {k:'baseSalary',     label:'底薪',       ph:'如 2300', num:true},
+    {k:'fullAttendance', label:'全勤奖',     ph:'0.00',    num:true}
+  ]},
+  {group:'加班（费用可自动算）', fields:[
+    {k:'otHours1', label:'平时加班小时', ph:'小时', num:true},
+    {k:'otPay1',   label:'平时加班费',   ph:'自动', num:true, auto:true},
+    {k:'otHours2', label:'假日加班小时', ph:'小时', num:true},
+    {k:'otPay2',   label:'假日加班费',   ph:'自动', num:true, auto:true},
+    {k:'otHours3', label:'法定加班小时', ph:'小时', num:true},
+    {k:'otPay3',   label:'法定假加班费', ph:'自动', num:true, auto:true}
+  ]},
+  {group:'补贴与扣款', fields:[
+    {k:'nightAllowance', label:'夜班补贴', ph:'0.00', num:true},
+    {k:'otherAllowance', label:'其它（补贴）', ph:'0.00', num:true},
+    {k:'housingAllowance', label:'住房补贴', ph:'0.00', num:true},
+    {k:'absentHours',    label:'缺勤小时', ph:'小时', num:true},
+    {k:'deduction',      label:'扣款',     ph:'0.00', num:true}
+  ]},
+  {group:'结算', fields:[
+    {k:'grossPay', label:'应发合计', ph:'自动', num:true, auto:true},
+    {k:'socialSecurity', label:'代扣社保', ph:'0.00', num:true},
+    {k:'socialMakeup',   label:'社保补缴', ph:'0.00', num:true},
+    {k:'incomeTax',      label:'个人所得税', ph:'0.00', num:true},
+    {k:'otherDeduction', label:'其它（扣款）', ph:'0.00', num:true},
+    {k:'netPay', label:'实发', ph:'自动', num:true, auto:true}
+  ]},
+  {group:'备注', fields:[ {k:'remark', label:'备注', ph:'可不填', full:true, text:true} ]}
+];
+
+function openEditor(id){
+  state.editingId = id;
+  const r = state.records.find(x => x.id === id);
+  if (!r) return;
+  const body = document.getElementById('sheetBody');
+  let html = '';
+  FIELD_DEFS.forEach(g => {
+    html += `<div class="fgroup"><h4>${g.group}</h4><div class="fields">`;
+    g.fields.forEach(f => {
+      const val = r[f.k] ?? '';
+      const isAuto = f.auto && state.auto;
+      const manual = !!(r.manual && r.manual[f.k]);
+      const cls = f.full ? 'field full' : 'field';
+      const inputCls = isAuto && !manual ? 'auto' : '';
+      const badge = f.auto ? `<span class="badge ${manual || !state.auto ? 'manual' : ''}" data-badge="${f.k}">${isAuto && !manual ? '自动' : (state.auto ? '手动 ↺' : '手动')}</span>` : '';
+      html += `<div class="${cls}">
+        <label><span>${f.label}</span>${badge}</label>
+        <input data-key="${f.k}" value="${esc(val)}" placeholder="${f.ph || ''}"
+          ${f.text ? '' : 'inputmode="decimal"'} autocomplete="off" ${isAuto ? 'readonly' : ''} ${isAuto && manual ? '' : ''} class="${inputCls}">
+      </div>`;
+    });
+    html += '</div></div>';
+  });
+  html += `<div class="rule">
+    <b>自动计算规则</b><br>
+    时薪 = 底薪 ÷ 174（21.75 天 × 8 小时），四舍五入到分<br>
+    平时加班费 = 时薪 × 1.5 × 小时 ｜ 假日 × 2 ｜ 法定假 × 3<br>
+    应发合计 = 底薪 + 全勤奖 + 加班费 + 夜班补贴 + 其它 + 住房补贴 − 扣款<br>
+    实发 = 应发合计 − 代扣社保 − 社保补缴 − 个人所得税 − 其它扣款<br>
+    <span style="color:#9a6a00">任何自动值都能手动改：点「自动」标签切换为手动；点「手动 ↺」恢复自动。</span>
+  </div>`;
+  body.innerHTML = html;
+  body.scrollTop = 0;
+  document.getElementById('sheet').classList.add('open');
+  bindEditor(r);
+}
+
+function closeEditor(){
+  document.getElementById('sheet').classList.remove('open');
+  state.editingId = null;
+  renderList(); renderPreview(); saveLocal();
+}
+
+function bindEditor(r){
+  const body = document.getElementById('sheetBody');
+  body.querySelectorAll('input[data-key]').forEach(inp => {
+    inp.addEventListener('focus', () => {
+      const k = inp.dataset.key;
+      if (state.auto && !r.manual[k] && AUTO_KEYS.includes(k) && inp.readOnly){
+        r.manual[k] = true;
+        inp.readOnly = false;
+        inp.classList.remove('auto');
+        updateBadge(k, 'manual');
+      }
+    });
+    inp.addEventListener('input', () => {
+      const k = inp.dataset.key;
+      const def = FIELD_DEFS.flatMap(g=>g.fields).find(f=>f.k===k);
+      if (!def) return;
+      if (AUTO_KEYS.includes(k) && state.auto && !r.manual[k]){
+        r.manual[k] = true;
+        updateBadge(k, 'manual');
+        inp.classList.remove('auto');
+      }
+      r[k] = inp.value;
+      if (state.auto) {
+        recalc(r);
+        body.querySelectorAll('input[data-key]').forEach(other => {
+          const key = other.dataset.key;
+          if (!AUTO_KEYS.includes(key) || !state.auto || r.manual[key]) return;
+          if (other === inp) return;
+          const v = r[key] ?? '';
+          if (other.value !== String(v)) other.value = v;
+        });
+      }
+      refreshBadges();
+      renderPreview(); renderList(); saveLocal();
+    });
+  });
+  body.querySelectorAll('[data-badge]').forEach(b => {
+    b.addEventListener('click', () => {
+      const k = b.dataset.badge;
+      if (!state.auto) { toast('「自动计算」开关未打开'); return; }
+      if (r.manual[k]) { delete r.manual[k]; recalc(r); toast('已恢复自动计算'); }
+      else { r.manual[k] = true; toast('已切换为手动，可直接输入'); }
+      syncEditorValues(r);
+      updateBadge(k, r.manual[k] ? 'manual' : 'auto');
+      renderPreview(); renderList(); saveLocal();
+    });
+  });
+}
+
+function updateBadge(k, mode){
+  const b = document.querySelector(`[data-badge="${k}"]`);
+  if (!b) return;
+  if (mode === 'manual'){ b.textContent = '手动 ↺'; b.classList.add('manual'); }
+  else { b.textContent = '自动'; b.classList.remove('manual'); }
+}
+function refreshBadges(){
+  const r = state.records.find(x => x.id === state.editingId);
+  if (!r) return;
+  AUTO_KEYS.forEach(k => {
+    const b = document.querySelector(`[data-badge="${k}"]`);
+    if (!b) return;
+    if (!state.auto){ b.textContent = '手动'; b.classList.add('manual'); }
+    else if (r.manual[k]){ b.textContent = '手动 ↺'; b.classList.add('manual'); }
+    else { b.textContent = '自动'; b.classList.remove('manual'); }
+  });
+}
+function syncEditorValues(r){
+  document.querySelectorAll('#sheetBody input[data-key]').forEach(inp => {
+    const k = inp.dataset.key;
+    const v = r[k] ?? '';
+    if (inp.value !== String(v)) inp.value = v;
+    const isAuto = AUTO_KEYS.includes(k) && state.auto && !r.manual[k];
+    inp.readOnly = isAuto;
+    inp.classList.toggle('auto', isAuto);
+  });
+}
+
+/* ---------------- 提示与确认 ---------------- */
+let toastTimer = null;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function askConfirm(msg){
+  return new Promise(resolve => {
+    const mask = document.getElementById('confirmMask');
+    document.getElementById('confirmText').textContent = msg;
+    mask.classList.add('show');
+    const done = v => { mask.classList.remove('show'); mask.onclick = null;
+      ok.onclick = null; cancel.onclick = null; resolve(v); };
+    const ok = document.getElementById('confirmOk');
+    const cancel = document.getElementById('confirmCancel');
+    ok.onclick = () => done(true);
+    cancel.onclick = () => done(false);
+    mask.onclick = e => { if (e.target === mask) done(false); };
+  });
+}
+
+/* ============================================================
+ *  表格 -> 图片（Canvas 直接绘制，默认 200 DPI）
+ *  不依赖任何第三方库，输出 PNG 存进手机相册
+ * ============================================================ */
+const IMG_DPI  = 200;                 // 输出分辨率
+const TBL_TW   = 16270;               // 表宽（twip），与打印版一致
+const HEADER_TW = 700;                // 表头行高（twip）
+const ROW_TW    = 430;                // 数据行高（twip）
+const MAX_PX_H  = 10000;              // 画布高度上限，人多时自动降 DPI
+
+function computeTwWidths(){
+  const sum = COLS.reduce((a, c) => a + c.tw, 0);
+  const ws = COLS.map(c => Math.max(300, Math.round(c.tw / sum * TBL_TW)));
+  const diff = TBL_TW - ws.reduce((a, b) => a + b, 0);
+  ws[ws.length - 1] += diff;
+  return ws;
+}
+
+/* 居中绘字；超出列宽时横向压扁，保证格子尺寸一格不差 */
+function drawFitText(ctx, text, cx, cy, maxW, size){
+  const t = (text === undefined || text === null) ? '' : String(text);
+  if (!t) return;
+  ctx.font = `${size}px "Noto Serif CJK SC","Songti SC",SimSun,serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const w = ctx.measureText(t).width;
+  if (w > maxW && w > 0){
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(Math.max(0.55, maxW / w), 1);
+    ctx.fillText(t, 0, 0);
+    ctx.restore();
+  } else {
+    ctx.fillText(t, cx, cy);
+  }
+}
+
+/* 人多时按高度上限自动降低 DPI，避免画布过大 */
+function pickDpi(records){
+  const twipsH = HEADER_TW + ROW_TW * records.length + 360;
+  const h = twipsH * IMG_DPI / 1440;
+  if (h <= MAX_PX_H) return IMG_DPI;
+  return Math.max(96, Math.floor(IMG_DPI * MAX_PX_H / h));
+}
+
+function drawTableCanvas(records, dpi){
+  const P = (dpi || IMG_DPI) / 1440;              // 1 twip 对应多少像素
+  const widths = computeTwWidths();
+  const headH  = Math.round(HEADER_TW * P);
+  const rowH   = Math.round(ROW_TW * P);
+  const pad    = Math.round(180 * P);             // 四周白边
+
+  // 列、行边界（取整，保证每条线像素级清晰）
+  const x = [pad];
+  widths.forEach(w => x.push(Math.round(x[x.length - 1] + w * P)));
+  const y = [pad + 0];
+  y.push(pad + headH);
+  records.forEach(() => y.push(y[y.length - 1] + rowH));
+
+  const cv = document.createElement('canvas');
+  cv.width  = x[x.length - 1] + pad;
+  cv.height = y[y.length - 1] + pad;
+  const ctx = cv.getContext('2d');
+
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+
+  // 网格：0.5pt 黑线
+  const lw = Math.max(1, Math.round(0.5 / 72 * (dpi || IMG_DPI)));
+  ctx.fillStyle = '#000';
+  const xL = x[0], xR = x[x.length - 1], yT = y[0], yB = y[y.length - 1];
+  y.forEach(yy => ctx.fillRect(xL, yy, xR - xL, lw));
+  x.forEach(xx => ctx.fillRect(xx, yT, lw, yB - yT + lw));
+
+  // 字号：7.5pt，与 Word 版一致
+  const fSize = Math.max(12, Math.round(7.5 / 72 * (dpi || IMG_DPI)));
+
+  // 表头（按 c.lines 分行，与照片断行一致）
+  const hMid = (y[0] + y[1]) / 2;
+  const lineGap = fSize * 1.28;
+  COLS.forEach((c, i) => {
+    const maxW = (x[i + 1] - x[i]) - 6;
+    const cx = (x[i] + x[i + 1]) / 2;
+    const lines = c.lines;
+    const top = hMid - (lines.length - 1) * lineGap / 2;
+    lines.forEach((ln, k) => drawFitText(ctx, ln, cx, top + k * lineGap, maxW, fSize));
+  });
+
+  // 数据行
+  records.forEach((r, ri) => {
+    const cy = (y[ri + 1] + y[ri + 2]) / 2;
+    COLS.forEach((c, i) => {
+      const maxW = (x[i + 1] - x[i]) - 6;
+      const cx = (x[i] + x[i + 1]) / 2;
+      drawFitText(ctx, displayValue(r, c), cx, cy, maxW, fSize);
+    });
+  });
+
+  return cv;
+}
+
+/* ============================================================
+ * 导出 / 打印
+ * ============================================================ */
+function stamp(){
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
+}
+
+function exportImage(){
+  if (!state.records.length){ toast('请先添加至少一条记录'); return; }
+  const records = state.records.map(r => { recalc(r); return r; });
+
+  let cv, dataUrl;
+  try {
+    cv = drawTableCanvas(records, pickDpi(records));
+    dataUrl = cv.toDataURL('image/png');
+  } catch (e) {
+    toast('生成失败：' + e.message);
+    return;
+  }
+
+  const name = `工资条_${stamp()}.png`;
+  const b64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
+
+  if (window.AndroidApp && typeof AndroidApp.saveImage === 'function'){
+    try { AndroidApp.saveImage(name, b64); }
+    catch (e) { toast('保存失败：' + e.message); }
+    return;
+  }
+
+  // 浏览器里运行（开发调试）时退回普通下载
+  const a = document.createElement('a');
+  a.href = dataUrl; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('已保存 ' + name);
+}
+
+function doPrint(){
+  if (!state.records.length){ toast('请先添加至少一条记录'); return; }
+  state.records.forEach(recalc);
+  renderPreview();
+  if (window.AndroidApp && typeof AndroidApp.printPage === 'function'){ AndroidApp.printPage(); }
+  else window.print();
+}
+
+/* ============================================================
+ * 事件绑定
+ * ============================================================ */
+function bindGlobal(){
+  document.getElementById('btnAdd').addEventListener('click', () => {
+    const r = newRecord({ salaryType: '底薪' });
+    state.records.push(r);
+    renderList(); renderPreview(); saveLocal();
+    openEditor(r.id);
+  });
+
+  document.getElementById('recordList').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const { act, id } = btn.dataset;
+    const idx = state.records.findIndex(r => r.id === id);
+    if (idx < 0) return;
+    if (act === 'edit') openEditor(id);
+    else if (act === 'dup'){
+      const copy = Object.assign(newRecord(), JSON.parse(JSON.stringify(state.records[idx])));
+      copy.id = uid();
+      state.records.splice(idx + 1, 0, copy);
+      renderList(); renderPreview(); saveLocal();
+      toast('已复制一条');
+    } else if (act === 'del'){
+      const ok = await askConfirm('删除这条工资条？删除后不可恢复。');
+      if (!ok) return;
+      state.records.splice(idx, 1);
+      renderList(); renderPreview(); saveLocal();
+      toast('已删除');
+    }
+  });
+
+  document.getElementById('btnCancel').addEventListener('click', () => {
+    closeEditor();
+  });
+  document.getElementById('btnDone').addEventListener('click', () => {
+    closeEditor();
+    toast('已保存');
+  });
+
+  document.getElementById('autoCalc').addEventListener('change', (e) => {
+    state.auto = e.target.checked;
+    if (state.auto) {
+      state.records.forEach(r => {
+        if (state.editingId === r.id){ /* 保留手动标记 */ }
+        recalc(r);
+      });
+      const editing = state.records.find(r => r.id === state.editingId);
+      if (editing) syncEditorValues(editing);
+    }
+    refreshBadges();
+    renderList(); renderPreview(); saveLocal();
+    toast(state.auto ? '已开启自动计算' : '已关闭自动计算（全部可手填）');
+  });
+
+  document.getElementById('btnImg').addEventListener('click', exportImage);
+  document.getElementById('btnPrint').addEventListener('click', doPrint);
+
+  document.getElementById('btnSample').addEventListener('click', () => {
+    const sample = {
+      seq: '001', month: '2026-09', name: '张三', salaryType: '底薪',
+      actualHours: '176', baseSalary: '2300', fullAttendance: '',
+      otHours1: '10', otPay1: '', otHours2: '4', otPay2: '', otHours3: '', otPay3: '',
+      nightAllowance: '', otherAllowance: '', housingAllowance: '57.14',
+      absentHours: '0', deduction: '0',
+      grossPay: '', socialSecurity: '517.91', socialMakeup: '', incomeTax: '',
+      otherDeduction: '0', netPay: '', remark: '',
+      manual: {}
+    };
+    const r = newRecord(sample);
+    recalc(r);
+    state.records.push(r);
+    renderList(); renderPreview(); saveLocal();
+    toast('已载入示例（虚构数据）');
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('sheet').classList.contains('open')) closeEditor();
+  });
+}
+
+/* ---------------- 启动 ---------------- */
+(function init(){
+  const restored = loadLocal();
+  if (!restored){ state.records = [newRecord({salaryType:'底薪'})]; }
+  document.getElementById('autoCalc').checked = state.auto;
+  bindGlobal();
+  recalcAll();
+  renderList();
+  renderPreview();
+  saveLocal();
+  if (!restored && history.replaceState) { /* 首次：不自动弹编辑，让用户看到空态与示例按钮 */ }
+})();
+
+/* 测试钩子（无副作用） */
+window.__payslip = { COLS, drawTableCanvas, pickDpi, state, recalc, newRecord,
+  setRecords(list){ state.records = list.map(o => newRecord(o)); recalcAll(); renderList(); renderPreview(); },
+  sample(){ document.getElementById('btnSample').click(); } };
+</script>
+</body>
+</html>
